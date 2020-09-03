@@ -81,7 +81,7 @@ func (p *taskPool) run() {
 			task.log(msg)
 			log.Info(msg)
 		case <-ticker.C:
-			if len(p.queue) == 0 {
+			if len(p.queue) == 0 || p.running >= util.Config.MaxParallelTasks || (util.Config.ConcurrencyMode != "project" && util.Config.ConcurrencyMode != "node" && p.running > 0) {
 				continue
 			}
 
@@ -114,10 +114,6 @@ func (p *taskPool) run() {
 }
 
 func (p *taskPool) blocks(t *task) bool {
-	if p.running >= util.Config.MaxParallelTasks {
-		return true
-	}
-
 	switch util.Config.ConcurrencyMode {
 	case "project":
 		return p.activeProj[t.projectID] != nil
@@ -130,7 +126,7 @@ func (p *taskPool) blocks(t *task) bool {
 
 		return false
 	default:
-		return p.running > 0
+		return false
 	}
 }
 
