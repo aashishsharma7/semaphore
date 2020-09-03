@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/ansible-semaphore/semaphore/api"
 	"github.com/ansible-semaphore/semaphore/api/sockets"
 	"github.com/ansible-semaphore/semaphore/api/tasks"
@@ -18,7 +19,6 @@ import (
 	"github.com/ansible-semaphore/semaphore/util"
 	"github.com/gorilla/handlers"
 	"golang.org/x/crypto/bcrypt"
-	log "github.com/Sirupsen/logrus"
 )
 
 func main() {

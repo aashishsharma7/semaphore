@@ -19,6 +19,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*db.User)
 
 	var taskObj db.Task
+
 	if err := util.Bind(w, r, &taskObj); err != nil {
 		return
 	}
@@ -36,6 +37,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	pool.register <- &task{
 		task:      taskObj,
 		projectID: project.ID,
+		priority:  taskObj.Priority,
 	}
 
 	objType := taskTypeID

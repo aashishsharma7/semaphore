@@ -17,6 +17,7 @@ type Task struct {
 	Environment string `db:"environment" json:"environment"`
 	// to fit into []string
 	Arguments *string `db:"arguments" json:"arguments"`
+	Priority  int     `db:"priority" json:"priority"`
 
 	UserID *int `db:"user_id" json:"user_id"`
 

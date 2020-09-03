@@ -37,6 +37,7 @@ type task struct {
 	alertChat   string
 	alert       bool
 	prepared    bool
+	priority	int
 }
 
 func (t *task) fail() {

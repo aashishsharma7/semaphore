@@ -18,6 +18,10 @@
 			.col-sm-6
 				div(ui-ace="{mode: 'json', workerPath: '/public/js/ace/'}" style="height: 100px" class="form-control" ng-model="task.arguments")
 		.form-group
+			label.control-label.col-sm-4 Priority (0 - 100)
+			.col-sm-6
+				input.form-control(type="number" min="0" max="100" oninput="validity.valid||(value='');" placeholder="0 for Highest" ng-model="task.priority")
+		.form-group
 			.col-sm-6.col-sm-offset-4: .checkbox: label
 				input(type="checkbox" ng-model="task.debug")
 				| Debug (<code>-vvvv</code>)

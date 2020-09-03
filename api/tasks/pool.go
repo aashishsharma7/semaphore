@@ -75,7 +75,7 @@ func (p *taskPool) run() {
 	for {
 		select {
 		case task := <-p.register:
-			p.queue = append(p.queue, task)
+			p.addToPriorityQueue(task)
 			log.Debug(task)
 			msg := "Task " + strconv.Itoa(task.task.ID) + " added to queue"
 			task.log(msg)
@@ -89,23 +89,25 @@ func (p *taskPool) run() {
 			t := p.queue[0]
 			if t.task.Status == taskFailStatus {
 				//delete failed task from queue
-				p.queue = p.queue[1:]
+				p.eraseFirstTask()
 				log.Info("Task " + strconv.Itoa(t.task.ID) + " removed from queue")
 				continue
 			}
 			if p.blocks(t) {
-				//move blocked task to end of queue
-				p.queue = append(p.queue[1:], t)
+				//move blocked task to end of queue by increasing its priority
+				t.priority = 100
+				p.minHeapify(0)
 				continue
 			}
 			log.Info("Set resourse locker with task " + strconv.Itoa(t.task.ID))
 			resourceLocker <- &resourceLock{lock: true, holder: t}
 			if !t.prepared {
+				t.priority = -1
 				go t.prepareRun()
 				continue
 			}
 			go t.run()
-			p.queue = p.queue[1:]
+			p.eraseFirstTask()
 			log.Info("Task " + strconv.Itoa(t.task.ID) + " removed from queue")
 		}
 	}
@@ -129,6 +131,50 @@ func (p *taskPool) blocks(t *task) bool {
 		return false
 	default:
 		return p.running > 0
+	}
+}
+
+func (p *taskPool) addToPriorityQueue(t *task) {
+	p.queue = append(p.queue, t)
+	id := len(p.queue) - 1
+	for id != 0 && p.queue[(id-1)/2].priority > p.queue[id].priority {
+		tempTask := p.queue[id]
+		p.queue[id] = p.queue[(id-1)/2]
+		p.queue[(id-1)/2] = tempTask
+		id = (id - 1) / 2
+	}
+}
+
+func (p *taskPool) minHeapify(id int) {
+
+	var minChldID int
+
+	if 2*id+2 < len(p.queue) {
+		if p.queue[2*id+1].priority < p.queue[2*id+2].priority {
+			minChldID = 2*id + 1
+		} else {
+			minChldID = 2*id + 2
+		}
+	} else if 2*id+1 < len(p.queue) {
+		minChldID = 2*id + 1
+	} else {
+		return
+	}
+
+	if p.queue[minChldID].priority < p.queue[id].priority {
+		tempTask := p.queue[id]
+		p.queue[id] = p.queue[minChldID]
+		p.queue[minChldID] = tempTask
+		p.minHeapify(minChldID)
+	}
+
+}
+
+func (p *taskPool) eraseFirstTask() {
+	p.queue[0] = p.queue[len(p.queue)-1]
+	p.queue = p.queue[:len(p.queue)-1]
+	if len(p.queue) != 0 {
+		p.minHeapify(0)
 	}
 }
 
